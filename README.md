@@ -77,6 +77,7 @@ Due to time and complexity limitations, I intentionally left some aspects unimpl
 - PHP (Back-end) and Reach (Front-end) are running on the same docker container, there is no separation.
 - Tests are not implemented due to time limitations.
 - Warnings and other errors are not properly handled due to time limitations.
+- Sorting and pagination is not implemented on front-end due to time limitations.
 
 ## Time Consumption of Development Steps & Problems Faced
 - Creating MySQL docker container and creating DB & table => Very easy and fast
