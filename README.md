@@ -66,6 +66,7 @@ docker run --net=host -d a868b8546a9e
 ### Frontend Server Creation
 - After I got a working a backend Restful server, I added `index.html` on the project root folder with React code inside.
 - The rest is improvements to code, like make-up changes, CSS styling, error handling and standard return values from API endpoints.
+- At first, I used `nano` to write the code from inside the PHP docker container through /bin/bash but after a while, it got harder to use `nano` as an editor. I committed existing PHP docker container as a new image, then created a new container from that image with volume mapped to my localhost folder, so that I can edit files in the container using Sublime on my localhost. That saved lots of time while working on CSS and React.
 
 ## Open Points
 
