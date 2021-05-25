@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Color Management Dashboard with PHP, MySQL & React.js</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src= "https://unpkg.com/react@16/umd/react.production.min.js"></script>
+    <script src= "https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+    <!-- Load Babel Compiler -->
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+</head>
+<body>
+<div id='root'></div>
+
+<script  type="text/babel">
+class ColorAddForm extends React.Component {
+    state = {
+        name: '',
+        hexcode: '',
+
+    }
+
+    handleFormSubmit( event ) {
+        event.preventDefault();
+
+        if (this.state.hexcode.length != 6 || this.state.name === "") {
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('name', this.state.name.toUpperCase())
+        formData.append('hexcode', "#" + this.state.hexcode.toUpperCase())
+
+        axios({
+            method: 'post',
+            url: '/api/colors.php',
+            data: formData,
+            config: { headers: {'Content-Type': 'multipart/form-data' }}
+        })
+        .then(function (response) {
+            //handle success
+            console.log(response);
+            window.location.reload(false);
+
+        })
+        .catch(function (error) {
+            //handle error
+            if (error.response) {
+                console.log(error.response);
+                alert(error.response.data.data);
+            }
+        });
+    }
+
+    render(){
+        const onNameChange = e => {
+          const input = e.currentTarget.value;
+          if (/^[0-9a-zA-Z]+$/.test(input) || input === "") {
+            this.setState({ name: input })
+          }
+        };
+        const onHexChange = e => {
+          const input = e.currentTarget.value;
+          if ((/^[0-9a-fA-F]+$/.test(input) || input === "") && (input.length <= 6)) {
+            this.setState({ hexcode: input })
+          }
+        };
+        return (
+        <form>
+            <table class="ftable">
+                <tr>
+                    <td>
+                        <label>Name</label>
+                    </td>
+                    <td>
+                        <input type="text" name="name" value={this.state.name}
+                            onChange={onNameChange}/>
+                    </td>
+                    <td>
+                        <label>Hexcode</label>
+                    </td>
+                    <td>
+                        <input type="text" name="hexcode" value={this.state.hexcode}
+                            onChange={onHexChange}/>
+                    </td>
+                    <td>
+                        <input type="submit" onClick={e => this.handleFormSubmit(e)} value="Create Color" />
+                    </td>
+                </tr>
+            </table>
+        </form>);
+    }
+}
+
+class ColorDeleteForm extends React.Component {
+    state = {
+        name: '',
+    }
+
+    handleFormSubmit( event ) {
+        event.preventDefault();
+
+        let formData = new FormData();
+        formData.append('name', this.state.name)
+
+        axios({
+            method: 'delete',
+            url: '/api/colors.php?name=' + this.state.name,
+            config: { headers: {'Content-Type': 'multipart/form-data' }}
+        })
+        .then(function (response) {
+            //handle success
+            console.log(response);
+            window.location.reload(false);
+
+        })
+        .catch(function (response) {
+            //handle error
+            console.log(response);
+        });
+    }
+
+    render(){
+        const onNameChange = e => {
+            const input = e.currentTarget.value;
+            if (/^[0-9a-zA-Z]+$/.test(input) || input === "") {
+                this.setState({ name: input })
+            }
+        };
+
+        return (
+        <form>
+            <table class="ftable">
+                <tr>
+                    <td>
+                        <label>Name</label>
+                    </td>
+                    <td>
+                    <input type="text" name="name" value={this.state.name}
+                        onChange={onNameChange}/>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                        <input type="submit" onClick={e => this.handleFormSubmit(e)} value="Delete Color" />
+                    </td>
+                </tr>
+            </table>
+        </form>);
+    }
+}
+
+class App extends React.Component {
+  state = {
+    colors: []
+  }
+  render() {
+    return (
+        <React.Fragment>
+        <h1>Color Management Dashboard with PHP, MySQL & React.js</h1>
+        <table class="rtable">
+        <tr>
+            <th>Name</th>
+            <th>Hexcode</th>
+            <th>Preview</th>
+        </tr>
+
+        {this.state.colors.map((color) => (
+        <tr>
+            <td>{ color.name }</td>
+            <td>{ color.hexcode }</td>
+            <td style={{backgroundColor: color.hexcode}}></td>
+        </tr>
+        ))}
+        </table>
+        <ColorAddForm />
+        <ColorDeleteForm />
+        </React.Fragment>
+    );
+  }
+
+  componentDidMount() {
+    const url = 'http://localhost:8081/api/colors.php'
+    axios.get(url).then(response => response.data)
+    .then((data) => {
+      this.setState({ colors: data.data })
+      console.log(this.state.colors)
+    })
+  }
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+</script>
+</body>
+</html>
