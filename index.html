@@ -196,6 +196,13 @@ class App extends React.Component {
       this.setState({ colors: data.data })
       console.log(this.state.colors)
     })
+    .catch(function (error) {
+            //handle error
+            if (error.response) {
+                console.log(error.response);
+                alert(error.response.data.data);
+            }
+        });
   }
 }
 
