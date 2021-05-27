@@ -119,9 +119,12 @@ class ColorDeleteForm extends React.Component {
             window.location.reload(false);
 
         })
-        .catch(function (response) {
+        .catch(function (error) {
             //handle error
-            console.log(response);
+            if (error.response) {
+                console.log(error.response);
+                alert(error.response.data.data);
+            }
         });
     }
 

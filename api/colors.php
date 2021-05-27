@@ -7,9 +7,11 @@ $username = "root";
 $password = "pass";
 
 try {
+  // Connection string
   $con = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
   $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+  // Get request method
   $method = $_SERVER['REQUEST_METHOD'];
   $request = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 
@@ -17,84 +19,62 @@ try {
     die("Connection failed: " . mysqli_connect_error());
   }
 
+  // Default response values
   $_code = 200;
   $jsonArray = array();
   $jsonArray["error"] = FALSE;
+  $jsonArray["data"] = null;
 
   switch ($method) {
     case 'GET':
+      // List colors endpoint
       $query = $con->query("SELECT * FROM colors");
+      $result = $query->fetchAll(PDO::FETCH_ASSOC);
+      $jsonArray["data"] = $result;
       break;
     case 'POST':
+      // Create color endpoint
       $query = $con->prepare("INSERT INTO colors (name, hexcode) VALUES (?, ?)");
       $name = $_POST["name"];
       $hexcode = $_POST["hexcode"];
       $qParams = array($name, $hexcode);
+      $result = $query->execute($qParams);
+      if (!$result) {
+        $_code = "400";
+        $jsonArray["error"] = TRUE;
+        break;
+      }
+      $_code = "201";
       break;
    case 'DELETE':
+      // Remove color endpoint
       $query = $con->prepare("DELETE FROM colors WHERE name = ?");
       $name = $_GET['name'];
       $qParams = array($name);
+      $result = $query->execute($qParams);
+      if (!$result) {
+        $_code = "400";
+        $jsonArray["error"] = TRUE;
+        break;
+      }
+      $_code = "202";
       break;
    default:
+      // Method not allowed
       $_code = "405";
-      SetHeader($_code);
-      $jsonArray["status"] = HttpStatus($_code);
-      $jsonArray["data"] = null;
-      echo json_encode($jsonArray);
-      die();
+      break;
   }
-
-  // run SQL statement
-  if ($method == 'GET') {
-    $result = $query->fetchAll(PDO::FETCH_ASSOC);
-  } elseif ($method == 'POST') {
-    $result = $query->execute($qParams);
-  } elseif ($method == 'DELETE') {
-    $result = $query->execute($qParams);
-  }
-
-  // die if SQL statement failed
-  if (!$result) {
-    http_response_code(404);
-    echo json_encode(array('Error', 'Operation Failed'));
-  }
-
-  if ($method == 'GET') {
-    SetHeader($_code);
-    $jsonArray["status"] = HttpStatus($_code);
-    $jsonArray["data"] = $result;
-    echo json_encode($jsonArray);
-  } elseif ($method == 'POST') {
-    $_code = "201";
-    SetHeader($_code);
-    $jsonArray["status"] = HttpStatus($_code);
-    $jsonArray["data"] = null;
-    echo json_encode($jsonArray);
-  } else {
-    $_code = "202";
-    SetHeader($_code);
-    $jsonArray["status"] = HttpStatus($_code);
-    $jsonArray["data"] = null;
-    echo json_encode($jsonArray);
-  }
-} catch (PDOException $e) {
-  $_code = "400";
-  SetHeader($_code);
-  $jsonArray["status"] = "Error";
-  $jsonArray["error"] = TRUE;
-  $jsonArray["data"] = $e->getMessage();
-  echo json_encode($jsonArray);
-  die();
 } catch (Exception $e) {
+  // Return exception message
   $_code = "400";
-  SetHeader($_code);
-  $jsonArray["status"] = "Error";
   $jsonArray["error"] = TRUE;
   $jsonArray["data"] = $e->getMessage();
-  echo json_encode($jsonArray);
-  die();
 }
+
+// Set header and add payload to response
+SetHeader($_code);
+$jsonArray["status"] = HttpStatus($_code);
+echo json_encode($jsonArray);
 
 $con = null;
 
